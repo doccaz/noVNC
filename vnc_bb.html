@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>noVNC</title>
+		<meta charset="utf-8">
+
+		<!-- Always force latest IE rendering engine (even in intranet) &
+	  Chrome Frame. Remove this if you use the .htaccess -->
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	  <!-- Bootstrap CSS -->
+	  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+	  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+	  <script src="vendor/status.js"></script>
+	  <script src="vendor/jquery-2.0.3.js"></script>
+
+	  <style type="text/css">
+
+body {
+	margin: 0;
+	background-color: dimgrey;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+	html {
+		height: 100%;
+	}
+
+	#status {
+		text-align: right;
+		bottom: 100%;
+		color: white;
+		font: bold 12px Helvetica;
+		padding: 6px 5px 4px 5px;
+	}
+
+	.img-thumbnail {
+		height: 40px;
+	}
+	#screen {
+		flex: 1; /* fill remaining space */
+		overflow: hidden;
+	}
+	.dropdown {
+		display: inline-block;
+	}
+
+	#content {
+		display: inline-block;
+	}
+
+	#actions.dropdown {
+		bottom:0px;
+	}
+
+	#shortcuts.dropdown {
+		bottom:0px;
+	}
+
+	#layouts.dropdown {
+		bottom:0px;
+	}
+
+	.dropdown-content {
+		display: none;
+		position: absolute;
+		background-color: #f9f9f9;
+		box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+		padding: 2px 2px;
+		z-index: 1;
+		background-color: #f1f1f1;
+		border: 1px solid #d3d3d3;
+		text-align: left;
+	}
+	.dropdown:hover .dropdown-content {
+		display: block;
+		bottom:100%;
+	}
+
+	#shortcuts.dropdown:hover #shortcut_toolbar.dropdown-content {
+		min-width: 120px;
+	}
+
+	#layouts.dropdown:hover #layout_toolbar.dropdown-content {
+		min-width: 80px;
+	}
+
+	#actions.dropdown:hover #action_toolbar.dropdown-content {
+		min-width: 80px;
+	}
+
+	#toolbar {
+		background-color:#5073c3;
+		display: inline-block;
+	}
+	  </style>
+
+	  <!-- Promise polyfill for IE11 -->
+	  <script src="vendor/promise.js"></script>
+
+	  <!-- ES2015/ES6 modules polyfill -->
+	  <script type="module">
+		  window._noVNC_has_module_support = true;
+	  </script>
+	  <script>
+		  window.addEventListener("load", function() {
+			  if (window._noVNC_has_module_support) return;
+			  const loader = document.createElement("script");
+			  loader.src = "vendor/browser-es-module-loader/dist/" + 
+				  "browser-es-module-loader.js";
+			  document.head.appendChild(loader);
+		  });
+	  </script>
+
+	  <!-- actual script modules -->
+	  <script type="module" crossorigin="anonymous">
+		  // RFB holds the API to connect and communicate with a VNC server
+		  import RFB from './core/rfb.js';
+
+	let rfb;
+	let desktopName;
+
+	// When this function is called we have
+	// successfully connected to a server
+	function connectedToServer(e) {
+	    status("Connected to " + desktopName);
+	}
+
+	// This function is called when we are disconnected
+	function disconnectedFromServer(e) {
+	    if (e.detail.clean) {
+		status("Disconnected");
+	    } else {
+		status("Something went wrong, connection is closed");
+	    }
+	}
+
+	// When this function is called, the server requires
+	// credentials to authenticate
+	function credentialsAreRequired(e) {
+	    const password = prompt("Password Required:");
+	    rfb.sendCredentials({ password: password });
+	}
+
+	// When this function is called we have received
+	// a desktop name from the server
+	function updateDesktopName(e) {
+	    desktopName = e.detail.name;
+	}
+
+	// Since most operating systems will catch Ctrl+Alt+Del
+	// before they get a chance to be intercepted by the browser,
+	// we provide a way to emulate this key sequence.
+	function sendCtrlAltDel() {
+	    rfb.sendCtrlAltDel();
+	    return false;
+	}
+
+
+	// start custom keyboard functions
+	function switchVT(e){
+
+	    rfb.switchTerminal(e);
+	    return false;
+	}
+	// end custom keyboard functions
+
+	// Show a status text in the top bar
+	function status(text) {
+	    document.getElementById('status').textContent = text;
+	}
+
+	// This function extracts the value of one variable from the
+	// query string. If the variable isn't defined in the URL
+	// it returns the default value instead.
+	function readQueryVariable(name, defaultValue) {
+	    // A URL with a query parameter can look like this:
+	    // https://www.example.com?myqueryparam=myvalue
+	    //
+	    // Note that we use location.href instead of location.search
+	    // because Firefox < 53 has a bug w.r.t location.search
+	    const re = new RegExp('.*[?&]' + name + '=([^&#]*)'),
+		  match = document.location.href.match(re);
+	    if (typeof defaultValue === 'undefined') { defaultValue = null; }
+
+			 if (match) {
+			 // We have to decode the URL since want the cleartext value
+			 return decodeURIComponent(match[1]);
+			 }
+
+			 return defaultValue;
+			 }
+
+			 document.onload = addDynamicContent();
+			 document.getElementById('ctrlaltdel')
+			 .onclick = sendCtrlAltDel;
+			 document.getElementById('ctrlaltf1')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf2')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf3')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf4')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf5')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf6')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf7')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf8')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf9')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf10')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf11')
+			 .onclick = switchVT;
+			 document.getElementById('ctrlaltf12')
+			 .onclick = switchVT;
+
+			/*
+			 var toggle  = document.getElementById("logo");
+			 var content = document.getElementById("content");
+			 var toolbar = document.getElementById("toolbar");
+
+			 toggle.addEventListener("click", function() {
+			 if (content.dataset.toggled ^= 1) {
+			 content.style.display =  "inline-block";
+			 toggle.content.style.display = "inline-block";
+			 } else {
+			 content.style.display =  "none";
+			 toggle.content.style.display = "inline-block";
+			 }
+			 }); */
+
+			 // Read parameters specified in the URL query string
+			 // By default, use the host and port of server that served this file
+			 const host = readQueryVariable('host', window.location.hostname);
+			 let port = readQueryVariable('port', window.location.port);
+			 const password = readQueryVariable('password', '');
+			 const path = readQueryVariable('path', 'websockify');
+
+			 // | | |         | | |
+			 // | | | Connect | | |
+			 // v v v         v v v
+
+			 status("Connecting");
+
+			 // Build the websocket URL used to connect
+			 let url;
+			 if (window.location.protocol === "https:") {
+			 url = 'wss';
+			 } else {
+			 url = 'ws';
+			 }
+			 url += '://' + host;
+			 if(port) {
+			 url += ':' + port;
+			 }
+			 url += '/' + path;
+
+			 // Creating a new RFB object will start a new connection
+			 rfb = new RFB(document.getElementById('screen'), url,
+			 { credentials: { password: password } });
+
+			 // Add listeners to important events from the RFB module
+			 rfb.addEventListener("connect",  connectedToServer);
+			 rfb.addEventListener("disconnect", disconnectedFromServer);
+			 rfb.addEventListener("credentialsrequired", credentialsAreRequired);
+			 rfb.addEventListener("desktopname", updateDesktopName);
+
+			 // Set parameters that can be changed on an active connection
+			 rfb.viewOnly = readQueryVariable('view_only', false);
+			 rfb.scaleViewport = readQueryVariable('scale', true);
+	  </script>
+	</head>
+
+	<body>
+		<div id="screen">
+			<!-- This is where the remote screen will appear -->
+		</div>
+		<div class="toolbar" id="toolbar">
+			<img src="vendor/logo.png" class="img-thumbnail" id="logo">
+			<div id="content">
+				<!-- keyboard shortcuts dropdown -->
+				<div class="dropdown" id="shortcuts">
+					<span class="btn btn-primary">atalhos</span><span class="glyphicon glyphicon-hand-up"></span>
+					<div class="dropdown-content" id="shortcut_toolbar">
+						<a  class="btn btn-link" id="ctrlaltdel" href="#">Ctrl-Alt-Del</a>
+						<a class="btn btn-link" id="ctrlaltf1" href="#">Ctrl-Alt-F1</a>
+						<a class="btn btn-link" id="ctrlaltf2" href="#">Ctrl-Alt-F2</a>
+						<a class="btn btn-link" id="ctrlaltf3" href="#">Ctrl-Alt-F3</a>
+						<a class="btn btn-link" id="ctrlaltf4" href="#">Ctrl-Alt-F4</a>
+						<a class="btn btn-link" id="ctrlaltf5" href="#">Ctrl-Alt-F5</a>
+						<a class="btn btn-link" id="ctrlaltf6" href="#">Ctrl-Alt-F6</a>
+						<a class="btn btn-link" id="ctrlaltf7" href="#">Ctrl-Alt-F7</a>
+						<a class="btn btn-link" id="ctrlaltf8" href="#">Ctrl-Alt-F8</a>
+						<a class="btn btn-link" id="ctrlaltf9" href="#">Ctrl-Alt-F9</a>
+						<a class="btn btn-link" id="ctrlaltf10" href="#">Ctrl-Alt-F10</a>
+						<a class="btn btn-link" id="ctrlaltf11" href="#">Ctrl-Alt-F11</a>
+						<a class="btn btn-link" id="ctrlaltf12" href="#">Ctrl-Alt-F12</a>
+					</div>
+				</div>
+				<!-- actions dropdown -->
+				<div class="dropdown" id="actions">
+					<span class="btn btn-primary">a&ccedil;&otilde;es <span class="glyphicon glyphicon-cog"></span></span>
+					<div class="dropdown-content" id="action_toolbar">
+					</div>
+				</div>
+
+				<div class="dropdown" id="status">Loading</div>
+			</div>
+		</div>
+	</body>
+</html>

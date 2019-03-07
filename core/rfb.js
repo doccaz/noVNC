@@ -334,6 +334,78 @@ export default class RFB extends EventTargetMixin {
         this.sendKey(KeyTable.XK_Control_L, "ControlLeft", false);
     }
 
+    switchTerminal(e) {
+        if (this._rfb_connection_state !== 'connected' || this._viewOnly) { return; }
+
+	origin = e.currentTarget.id;
+
+        Log.Info("Sending shortcut: " + origin);
+
+	var FKeyName = null;
+	var FKeyID = null;
+
+	switch(origin) {
+		case "ctrlaltf1":
+			FKeyName = KeyTable.XK_F1;
+			FKeyID = "F1";
+			break;
+		case "ctrlaltf2":
+			FKeyName = KeyTable.XK_F2;
+			FKeyID = "F2";
+			break;
+		case "ctrlaltf3":
+			FKeyName = KeyTable.XK_F3;
+			FKeyID = "F3";
+			break;
+		case "ctrlaltf4":
+			FKeyName = KeyTable.XK_F4;
+			FKeyID = "F4";
+			break;
+		case "ctrlaltf5":
+			FKeyName = KeyTable.XK_F5;
+			FKeyID = "F5";
+			break;
+		case "ctrlaltf6":
+			FKeyName = KeyTable.XK_F6;
+			FKeyID = "F6";
+			break;
+		case "ctrlaltf7":
+			FKeyName = KeyTable.XK_F7;
+			FKeyID = "F7";
+			break;
+		case "ctrlaltf8":
+			FKeyName = KeyTable.XK_F8;
+			FKeyID = "F8";
+			break;
+		case "ctrlaltf9":
+			FKeyName = KeyTable.XK_F9;
+			FKeyID = "F9";
+			break;
+		case "ctrlaltf10":
+			FKeyName = KeyTable.XK_F10;
+			FKeyID = "F10";
+			break;
+		case "ctrlaltf11":
+			FKeyName = KeyTable.XK_F11;
+			FKeyID = "F11";
+			break;
+		case "ctrlaltf12":
+			FKeyName = KeyTable.XK_F12;
+			FKeyID = "F12";
+			break;
+		default:
+			Log.Info("unknown VT: " + origin);
+			return false;
+	}
+
+        this.sendKey(KeyTable.XK_Control_L, "ControlLeft", true);
+	this.sendKey(KeyTable.XK_Alt_L, "AltLeft", true);
+	this.sendKey(FKeyName, FKeyID, true);
+	this.sendKey(FKeyName, FKeyID, false);
+	this.sendKey(KeyTable.XK_Alt_L, "AltLeft", false);
+	this.sendKey(KeyTable.XK_Control_L, "ControlLeft", false);
+    }
+
     machineShutdown() {
         this._xvpOp(1, 2);
     }
