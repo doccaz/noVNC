@@ -1790,8 +1790,11 @@ export default class RFB extends EventTargetMixin {
     }
 
     static genDES(password, challenge) {
-        const passwordChars = password.split('').map(c => c.charCodeAt(0));
-        return (new DES(passwordChars)).encrypt(challenge);
+        const passwd = [];
+        for (let i = 0; i < password.length; i++) {
+            passwd.push(password.charCodeAt(i));
+        }
+        return (new DES(passwd)).encrypt(challenge);
     }
 }
 
