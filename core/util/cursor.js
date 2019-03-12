@@ -6,10 +6,10 @@
 
 import { supportsCursorURIs, isTouchDevice } from './browser.js';
 
-const useFallback = !supportsCursorURIs || isTouchDevice;
+const useFallback = !supportsCursorURIs() || isTouchDevice;
 
 export default class Cursor {
-    constructor() {
+    constructor(container) {
         this._target = null;
 
         this._canvas = document.createElement('canvas');

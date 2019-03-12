@@ -8,7 +8,14 @@
 
 import * as Log from './util/logging.js';
 import Base64 from "./base64.js";
-import { supportsImageMetadata } from './util/browser.js';
+
+let SUPPORTS_IMAGEDATA_CONSTRUCTOR = false;
+try {
+    new ImageData(new Uint8ClampedArray(4), 1, 1);
+    SUPPORTS_IMAGEDATA_CONSTRUCTOR = true;
+} catch (ex) {
+    // ignore failure
+}
 
 export default class Display {
     constructor(target) {
@@ -566,7 +573,7 @@ export default class Display {
     _rgbxImageData(x, y, width, height, arr, offset) {
         // NB(directxman12): arr must be an Type Array view
         let img;
-        if (supportsImageMetadata) {
+        if (SUPPORTS_IMAGEDATA_CONSTRUCTOR) {
             img = new ImageData(new Uint8ClampedArray(arr.buffer, arr.byteOffset, width * height * 4), width, height);
         } else {
             img = this._drawCtx.createImageData(width, height);
